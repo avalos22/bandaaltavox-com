@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <!-- "ALTA" text -->
+  <text x="0" y="58" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="52" fill="#FFFFFF" letter-spacing="4">ALTA</text>
+  <!-- "VOX" text with accent color -->
+  <text x="178" y="58" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="52" fill="#F59E0B" letter-spacing="4">VOX</text>
+  <!-- Underline accent -->
+  <rect x="0" y="66" width="310" height="3" rx="1.5" fill="#F59E0B"/>
+</svg>
