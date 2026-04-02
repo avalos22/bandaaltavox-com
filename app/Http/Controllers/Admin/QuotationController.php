@@ -47,7 +47,8 @@ class QuotationController extends Controller
                 ->orderBy('category')
                 ->orderBy('sort_order')
                 ->get(),
-            'addonCategories' => ServiceAddon::CATEGORIES,
+            'addonCategories'    => ServiceAddon::CATEGORIES,
+            'addonSubcategories' => ServiceAddon::SUBCATEGORIES,
             'defaults' => [
                 'validity_days' => (int) Setting::get('quotation_validity_days', 15),
                 'deposit_percentage' => (int) Setting::get('deposit_percentage', 30),

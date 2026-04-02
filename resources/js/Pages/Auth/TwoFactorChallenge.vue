@@ -11,6 +11,7 @@ const props = defineProps({
 
 const form = useForm({
     code: '',
+    trust_device: false,
 });
 
 const submit = () => {
@@ -81,6 +82,16 @@ const logout = () => {
                     />
                     <InputError class="mt-2" :message="form.errors.code" />
                 </div>
+
+                <!-- Trust this device -->
+                <label class="mt-4 flex cursor-pointer items-center gap-2.5">
+                    <input
+                        type="checkbox"
+                        v-model="form.trust_device"
+                        class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400"
+                    />
+                    <span class="text-sm text-gray-600">Confiar en este dispositivo por 30 días</span>
+                </label>
 
                 <PrimaryButton
                     class="mt-6 w-full justify-center rounded-lg bg-amber-500 py-2.5 hover:bg-amber-600 focus:bg-amber-600 focus:ring-amber-500"

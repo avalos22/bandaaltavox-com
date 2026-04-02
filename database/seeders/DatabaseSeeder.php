@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
             AdminUserSeeder::class,
             PackageSeeder::class,
+            ServiceAddonSeeder::class,
         ]);
     }
 }

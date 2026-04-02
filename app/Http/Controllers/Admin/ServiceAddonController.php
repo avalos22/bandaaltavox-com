@@ -28,19 +28,23 @@ class ServiceAddonController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Packages/Addons/Create', [
-            'categories' => ServiceAddon::CATEGORIES,
+            'categories'    => ServiceAddon::CATEGORIES,
+            'subcategories' => ServiceAddon::SUBCATEGORIES,
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'in:' . implode(',', array_keys(ServiceAddon::CATEGORIES))],
-            'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'unit' => ['required', 'string', 'max:50'],
-            'is_active' => ['boolean'],
+            'name'           => ['required', 'string', 'max:255'],
+            'category'       => ['required', 'string', 'in:' . implode(',', array_keys(ServiceAddon::CATEGORIES))],
+            'subcategory'    => ['nullable', 'string', 'max:100'],
+            'description'    => ['nullable', 'string'],
+            'price'          => ['nullable', 'numeric', 'min:0'],
+            'supplier_price' => ['nullable', 'numeric', 'min:0'],
+            'unit'           => ['required', 'string', 'max:50'],
+            'duration'       => ['nullable', 'string', 'max:50'],
+            'is_active'      => ['boolean'],
         ]);
 
         ServiceAddon::create($validated);
@@ -51,20 +55,24 @@ class ServiceAddonController extends Controller
     public function edit(ServiceAddon $addon)
     {
         return Inertia::render('Admin/Packages/Addons/Edit', [
-            'editAddon' => $addon,
-            'categories' => ServiceAddon::CATEGORIES,
+            'editAddon'     => $addon,
+            'categories'    => ServiceAddon::CATEGORIES,
+            'subcategories' => ServiceAddon::SUBCATEGORIES,
         ]);
     }
 
     public function update(Request $request, ServiceAddon $addon)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'category' => ['required', 'string', 'in:' . implode(',', array_keys(ServiceAddon::CATEGORIES))],
-            'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'unit' => ['required', 'string', 'max:50'],
-            'is_active' => ['boolean'],
+            'name'           => ['required', 'string', 'max:255'],
+            'category'       => ['required', 'string', 'in:' . implode(',', array_keys(ServiceAddon::CATEGORIES))],
+            'subcategory'    => ['nullable', 'string', 'max:100'],
+            'description'    => ['nullable', 'string'],
+            'price'          => ['nullable', 'numeric', 'min:0'],
+            'supplier_price' => ['nullable', 'numeric', 'min:0'],
+            'unit'           => ['required', 'string', 'max:50'],
+            'duration'       => ['nullable', 'string', 'max:50'],
+            'is_active'      => ['boolean'],
         ]);
 
         $addon->update($validated);

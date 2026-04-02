@@ -34,7 +34,8 @@ class PackageController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Packages/Create', [
-            'eventTypes' => EventType::where('is_active', true)->orderBy('sort_order')->get(),
+            'eventTypes'       => EventType::where('is_active', true)->orderBy('sort_order')->get(),
+            'addonSubcategories' => \App\Models\ServiceAddon::SUBCATEGORIES,
         ]);
     }
 
@@ -45,6 +46,7 @@ class PackageController extends Controller
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'duration_hours' => ['required', 'integer', 'min:1'],
+            'required_addon_subcategory' => ['nullable', 'string', 'max:100'],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
             'event_types' => ['array'],
@@ -60,6 +62,7 @@ class PackageController extends Controller
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'duration_hours' => $validated['duration_hours'],
+            'required_addon_subcategory' => $validated['required_addon_subcategory'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
             'is_featured' => $validated['is_featured'] ?? false,
         ]);
@@ -84,8 +87,9 @@ class PackageController extends Controller
         $package->load(['includes', 'eventTypes']);
 
         return Inertia::render('Admin/Packages/Edit', [
-            'editPackage' => $package,
-            'eventTypes' => EventType::where('is_active', true)->orderBy('sort_order')->get(),
+            'editPackage'      => $package,
+            'eventTypes'       => EventType::where('is_active', true)->orderBy('sort_order')->get(),
+            'addonSubcategories' => \App\Models\ServiceAddon::SUBCATEGORIES,
         ]);
     }
 
@@ -96,6 +100,7 @@ class PackageController extends Controller
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'duration_hours' => ['required', 'integer', 'min:1'],
+            'required_addon_subcategory' => ['nullable', 'string', 'max:100'],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
             'event_types' => ['array'],
@@ -111,6 +116,7 @@ class PackageController extends Controller
             'description' => $validated['description'] ?? null,
             'price' => $validated['price'],
             'duration_hours' => $validated['duration_hours'],
+            'required_addon_subcategory' => $validated['required_addon_subcategory'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
             'is_featured' => $validated['is_featured'] ?? false,
         ]);

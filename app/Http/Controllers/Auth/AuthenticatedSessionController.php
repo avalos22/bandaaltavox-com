@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\TrustedDevice;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,14 +36,22 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        // If user needs 2FA setup (assigned type but not confirmed)
-        if ($user->needsTwoFactorSetup()) {
-            return redirect()->route('two-factor.setup');
+        // Check if this device was previously trusted (skip 2FA if so)
+        $cookieToken = $request->cookie('two_factor_trusted');
+        if ($cookieToken && TrustedDevice::findValid($user->id, $cookieToken)) {
+            $request->session()->put('two_factor_verified', true);
         }
 
-        // If user has 2FA enabled, redirect to challenge
-        if ($user->hasTwoFactorEnabled()) {
-            return redirect()->route('two-factor.challenge');
+        if (! $request->session()->get('two_factor_verified')) {
+            // If user needs 2FA setup (assigned type but not confirmed)
+            if ($user->needsTwoFactorSetup()) {
+                return redirect()->route('two-factor.setup');
+            }
+
+            // If user has 2FA enabled, redirect to challenge
+            if ($user->hasTwoFactorEnabled()) {
+                return redirect()->route('two-factor.challenge');
+            }
         }
 
         if ($user->hasRole('Cliente')) {

@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputError from '@/Components/InputError.vue';
@@ -15,8 +16,11 @@ const form = useForm({
     phone: '',
     password: '',
     role: props.roles?.[0] || '',
+    two_factor_type: 'email',
     is_active: true,
 });
+
+const isCliente = computed(() => form.role === 'Cliente');
 
 const submit = () => {
     form.post(route('admin.users.store'));
@@ -105,6 +109,28 @@ const submit = () => {
                         <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
                     </select>
                     <InputError class="mt-2" :message="form.errors.role" />
+                </div>
+
+                <!-- 2FA Method (only for Clientes) -->
+                <div v-if="isCliente">
+                    <InputLabel value="Método de autenticación 2FA" />
+                    <div class="mt-2 flex flex-col gap-2">
+                        <label class="flex cursor-pointer items-center gap-2.5">
+                            <input type="radio" v-model="form.two_factor_type" value="email" class="h-4 w-4 border-gray-300 text-amber-500 focus:ring-amber-400" />
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Código por correo electrónico</span>
+                                <p class="text-xs text-gray-500">Se envía un código de 6 dígitos al correo del cliente en cada acceso.</p>
+                            </div>
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-2.5">
+                            <input type="radio" v-model="form.two_factor_type" value="totp" class="h-4 w-4 border-gray-300 text-amber-500 focus:ring-amber-400" />
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">App autenticadora (QR / TOTP)</span>
+                                <p class="text-xs text-gray-500">El cliente escanea un QR con Google Authenticator o Authy en su primer acceso.</p>
+                            </div>
+                        </label>
+                    </div>
+                    <InputError class="mt-2" :message="form.errors.two_factor_type" />
                 </div>
 
                 <!-- Active -->

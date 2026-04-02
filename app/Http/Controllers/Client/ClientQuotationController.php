@@ -54,6 +54,7 @@ class ClientQuotationController extends Controller
                 ->orderBy('sort_order')
                 ->get(),
             'addonCategories' => ServiceAddon::CATEGORIES,
+            'addonSubcategories' => ServiceAddon::SUBCATEGORIES,
         ]);
     }
 

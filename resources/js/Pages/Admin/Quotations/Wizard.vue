@@ -11,6 +11,7 @@ const props = defineProps({
     packages: Array,
     addons: Array,
     addonCategories: Object,
+    addonSubcategories: Object,
     defaults: Object,
 });
 
@@ -67,16 +68,16 @@ const toggleAddon = (addonId) => {
 // --- Smart suggestions ---
 const suggestedAddonIds = computed(() => {
     const ids = [];
-    // If outdoor, suggest equipment category addons (like lona)
+    // If outdoor, suggest toldos
     if (form.event_is_outdoor) {
         props.addons.forEach(a => {
-            if (a.category === 'equipment') ids.push(a.id);
+            if (a.subcategory === 'Toldos') ids.push(a.id);
         });
     }
-    // If many guests, suggest extra equipment
-    if (form.guest_count >= 200) {
+    // If many guests, suggest extra audio
+    if (parseInt(form.guest_count) >= 200) {
         props.addons.forEach(a => {
-            if (a.category === 'equipment' && !ids.includes(a.id)) ids.push(a.id);
+            if (a.category === 'audio' && !ids.includes(a.id)) ids.push(a.id);
         });
     }
     return ids;
@@ -92,7 +93,8 @@ const buildItems = () => {
             reference_id: selectedPackage.value.id,
             description: `Paquete ${selectedPackage.value.name} (${form.hours_contracted} hrs)`,
             quantity: 1,
-            unit_price: parseFloat(selectedPackage.value.price),
+            unit_price: selectedPackage.value.price != null ? parseFloat(selectedPackage.value.price) : 0,
+            price_pending: selectedPackage.value.price == null,
         });
     }
     // Addons
@@ -105,7 +107,8 @@ const buildItems = () => {
                 reference_id: addon.id,
                 description: addon.name,
                 quantity: qty,
-                unit_price: parseFloat(addon.price),
+                unit_price: addon.price != null ? parseFloat(addon.price) : 0,
+                price_pending: addon.price == null,
             });
         }
     });
@@ -126,15 +129,28 @@ const depositAmount = computed(() => {
     return Math.round(total.value * (props.defaults.deposit_percentage / 100));
 });
 
-// --- Addon groups ---
+// --- Addon groups: category → subcategory → addons ---
 const groupedAddons = computed(() => {
     const groups = {};
     props.addons.forEach(addon => {
         const cat = addon.category;
-        if (!groups[cat]) groups[cat] = [];
-        groups[cat].push(addon);
+        const sub = addon.subcategory || '';
+        if (!groups[cat]) groups[cat] = {};
+        if (!groups[cat][sub]) groups[cat][sub] = [];
+        groups[cat][sub].push(addon);
     });
     return groups;
+});
+
+// --- Required addon for selected package ---
+const requiredSubcategory = computed(() => selectedPackage.value?.required_addon_subcategory ?? null);
+
+const requiredAddonSatisfied = computed(() => {
+    if (!requiredSubcategory.value) return true;
+    return props.addons.some(a =>
+        a.subcategory === requiredSubcategory.value &&
+        selectedAddonIds.value.includes(a.id)
+    );
 });
 
 // --- Navigation ---
@@ -144,6 +160,9 @@ const canNext = computed(() => {
     }
     if (step.value === 2) {
         return selectedPackageId.value !== null;
+    }
+    if (step.value === 3) {
+        return requiredAddonSatisfied.value;
     }
     if (step.value === 4) {
         return form.client_name.trim().length > 0;
@@ -333,10 +352,22 @@ const formatPrice = (price) => {
                                 </div>
 
                                 <h4 class="text-lg font-bold text-gray-800">{{ pkg.name }}</h4>
-                                <p class="text-2xl font-bold text-amber-600 mt-1">{{ formatPrice(pkg.price) }}</p>
+                                <p class="text-2xl font-bold text-amber-600 mt-1">
+                                    {{ pkg.price != null ? formatPrice(pkg.price) : 'A cotizar' }}
+                                </p>
                                 <p class="text-xs text-gray-500 mt-0.5">{{ pkg.duration_hours }} horas incluidas</p>
 
-                                <div v-if="pkg.includes?.length" class="mt-3 space-y-1">
+                                <!-- Required addon badge -->
+                                <div
+                                    v-if="pkg.required_addon_subcategory"
+                                    class="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2.5 py-0.5 text-[11px] font-medium text-blue-700"
+                                >
+                                    <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+                                    </svg>
+                                    Requiere elegir: {{ pkg.required_addon_subcategory }}
+                                </div>
+                                <div v-if="pkg.includes?.length" class="mt-3 space-y-1.5">
                                     <div
                                         v-for="inc in pkg.includes"
                                         :key="inc.id"
@@ -356,7 +387,23 @@ const formatPrice = (price) => {
 
                 <!-- ============ STEP 3: Extras / Add-ons ============ -->
                 <div v-show="step === 3" class="space-y-6">
-                    <!-- Smart suggestion banner -->
+                    <!-- Required addon warning -->
+                    <div
+                        v-if="requiredSubcategory && !requiredAddonSatisfied"
+                        class="rounded-xl border-2 border-amber-400 bg-amber-50 p-4"
+                    >
+                        <div class="flex items-start gap-3">
+                            <svg class="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-amber-800">El paquete seleccionado requiere elegir un grupo adicional</p>
+                                <p class="text-xs text-amber-700 mt-0.5">
+                                    Selecciona al menos una opción de <strong>{{ requiredSubcategory }}</strong> para continuar.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                     <div
                         v-if="suggestedAddonIds.length > 0"
                         class="rounded-xl border border-amber-200 bg-amber-50 p-4"
@@ -377,84 +424,114 @@ const formatPrice = (price) => {
                         </div>
                     </div>
 
-                    <div v-for="(addonsInGroup, category) in groupedAddons" :key="category" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                        <h3 class="text-base font-semibold text-gray-800 mb-3">
-                            {{ addonCategories[category] || category }}
-                        </h3>
+                    <div v-for="(subcategoryMap, category) in groupedAddons" :key="category" class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                        <!-- Category header -->
+                        <div class="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                            <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-500">
+                                {{ addonCategories[category] || category }}
+                            </h3>
+                        </div>
 
-                        <div class="space-y-2">
-                            <button
-                                v-for="addon in addonsInGroup"
-                                :key="addon.id"
-                                type="button"
-                                @click="toggleAddon(addon.id)"
+                        <div class="divide-y divide-gray-100">
+                            <div
+                                v-for="(addonsInGroup, subcategory) in subcategoryMap"
+                                :key="subcategory"
                                 :class="[
-                                    'flex w-full items-center gap-4 rounded-lg border-2 p-4 text-left transition-all',
-                                    selectedAddonIds.includes(addon.id)
-                                        ? 'border-amber-400 bg-amber-50'
-                                        : suggestedAddonIds.includes(addon.id)
-                                            ? 'border-amber-200 bg-amber-50/50 hover:border-amber-300'
-                                            : 'border-gray-200 hover:border-gray-300',
+                                    'p-4',
+                                    requiredSubcategory && subcategory === requiredSubcategory && !requiredAddonSatisfied
+                                        ? 'bg-amber-50/60'
+                                        : '',
                                 ]"
                             >
-                                <!-- Checkbox -->
-                                <div
-                                    :class="[
-                                        'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
-                                        selectedAddonIds.includes(addon.id)
-                                            ? 'border-amber-500 bg-amber-500'
-                                            : 'border-gray-300',
-                                    ]"
-                                >
-                                    <svg v-if="selectedAddonIds.includes(addon.id)" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                    </svg>
-                                </div>
-
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm font-medium text-gray-800">{{ addon.name }}</span>
-                                        <span
-                                            v-if="suggestedAddonIds.includes(addon.id)"
-                                            class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
-                                        >
-                                            Sugerido
-                                        </span>
-                                    </div>
-                                    <p v-if="addon.description" class="text-xs text-gray-500 mt-0.5">{{ addon.description }}</p>
-                                </div>
-
-                                <div class="text-right shrink-0">
-                                    <p class="text-sm font-bold text-amber-600">{{ formatPrice(addon.price) }}</p>
-                                    <p v-if="addon.unit" class="text-[10px] text-gray-400">por {{ addon.unit }}</p>
-                                </div>
-                            </button>
-
-                            <!-- Quantity control shown for selected addons -->
-                            <template v-for="addon in addonsInGroup" :key="'qty-' + addon.id">
-                                <div
-                                    v-if="selectedAddonIds.includes(addon.id) && addon.unit"
-                                    class="ml-9 flex items-center gap-3 pl-4"
-                                >
-                                    <span class="text-xs text-gray-500">Cantidad:</span>
-                                    <div class="flex items-center gap-1">
-                                        <button
-                                            type="button"
-                                            @click.stop="addonQuantities[addon.id] = Math.max(1, (addonQuantities[addon.id] || 1) - 1)"
-                                            class="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
-                                        >−</button>
-                                        <span class="w-8 text-center text-sm font-medium">{{ addonQuantities[addon.id] || 1 }}</span>
-                                        <button
-                                            type="button"
-                                            @click.stop="addonQuantities[addon.id] = (addonQuantities[addon.id] || 1) + 1"
-                                            class="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
-                                        >+</button>
-                                    </div>
-                                    <span class="text-xs text-gray-500 ml-2">
-                                        = {{ formatPrice(addon.price * (addonQuantities[addon.id] || 1)) }}
+                                <!-- Subcategory label -->
+                                <div class="mb-2 flex items-center gap-2">
+                                    <p v-if="subcategory" class="text-xs font-semibold text-gray-400 uppercase tracking-widest">{{ subcategory }}</p>
+                                    <span
+                                        v-if="requiredSubcategory && subcategory === requiredSubcategory && !requiredAddonSatisfied"
+                                        class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                                    >
+                                        Requerido
                                     </span>
                                 </div>
-                            </template>
+
+                                <div class="space-y-2">
+                                    <button
+                                        v-for="addon in addonsInGroup"
+                                        :key="addon.id"
+                                        type="button"
+                                        @click="toggleAddon(addon.id)"
+                                        :class="[
+                                            'flex w-full items-center gap-4 rounded-lg border-2 p-4 text-left transition-all',
+                                            selectedAddonIds.includes(addon.id)
+                                                ? 'border-amber-400 bg-amber-50'
+                                                : suggestedAddonIds.includes(addon.id)
+                                                    ? 'border-amber-200 bg-amber-50/50 hover:border-amber-300'
+                                                    : 'border-gray-200 hover:border-gray-300',
+                                        ]"
+                                    >
+                                        <!-- Checkbox -->
+                                        <div
+                                            :class="[
+                                                'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-colors',
+                                                selectedAddonIds.includes(addon.id)
+                                                    ? 'border-amber-500 bg-amber-500'
+                                                    : 'border-gray-300',
+                                            ]"
+                                        >
+                                            <svg v-if="selectedAddonIds.includes(addon.id)" class="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                        </div>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm font-medium text-gray-800">{{ addon.name }}</span>
+                                                <span
+                                                    v-if="suggestedAddonIds.includes(addon.id)"
+                                                    class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                                                >
+                                                    Sugerido
+                                                </span>
+                                            </div>
+                                            <p v-if="addon.description" class="text-xs text-gray-500 mt-0.5">{{ addon.description }}</p>
+                                            <p v-if="addon.duration" class="text-[11px] text-gray-400 mt-0.5">{{ addon.duration }}</p>
+                                        </div>
+
+                                        <div class="text-right shrink-0">
+                                            <p class="text-sm font-bold text-amber-600">
+                                                {{ addon.price != null ? formatPrice(addon.price) : 'Cotizar' }}
+                                            </p>
+                                            <p v-if="addon.unit" class="text-[10px] text-gray-400">{{ addon.unit }}</p>
+                                        </div>
+                                    </button>
+
+                                    <!-- Quantity control shown for selected addons -->
+                                    <template v-for="addon in addonsInGroup" :key="'qty-' + addon.id">
+                                        <div
+                                            v-if="selectedAddonIds.includes(addon.id) && addon.unit"
+                                            class="ml-9 flex items-center gap-3 pl-4"
+                                        >
+                                            <span class="text-xs text-gray-500">Cantidad:</span>
+                                            <div class="flex items-center gap-1">
+                                                <button
+                                                    type="button"
+                                                    @click.stop="addonQuantities[addon.id] = Math.max(1, (addonQuantities[addon.id] || 1) - 1)"
+                                                    class="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
+                                                >−</button>
+                                                <span class="w-8 text-center text-sm font-medium">{{ addonQuantities[addon.id] || 1 }}</span>
+                                                <button
+                                                    type="button"
+                                                    @click.stop="addonQuantities[addon.id] = (addonQuantities[addon.id] || 1) + 1"
+                                                    class="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
+                                                >+</button>
+                                            </div>
+                                            <span class="text-xs text-gray-500 ml-2">
+                                                = {{ addon.price != null ? formatPrice(addon.price * (addonQuantities[addon.id] || 1)) : 'A cotizar' }}
+                                            </span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -564,8 +641,14 @@ const formatPrice = (price) => {
                                 <tr v-for="(item, idx) in buildItems()" :key="idx">
                                     <td class="px-6 py-3 text-gray-800">{{ item.description }}</td>
                                     <td class="px-6 py-3 text-center text-gray-600">{{ item.quantity }}</td>
-                                    <td class="px-6 py-3 text-right text-gray-600">{{ formatPrice(item.unit_price) }}</td>
-                                    <td class="px-6 py-3 text-right font-medium text-gray-800">{{ formatPrice(item.quantity * item.unit_price) }}</td>
+                                    <td class="px-6 py-3 text-right text-gray-600">
+                                        <span v-if="item.price_pending" class="text-xs italic text-gray-400">A cotizar</span>
+                                        <span v-else>{{ formatPrice(item.unit_price) }}</span>
+                                    </td>
+                                    <td class="px-6 py-3 text-right font-medium text-gray-800">
+                                        <span v-if="item.price_pending" class="text-xs italic text-gray-400">A cotizar</span>
+                                        <span v-else>{{ formatPrice(item.quantity * item.unit_price) }}</span>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

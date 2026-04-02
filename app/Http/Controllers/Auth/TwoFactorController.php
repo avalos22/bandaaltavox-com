@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Notifications\TwoFactorCodeNotification;
 use Illuminate\Http\RedirectResponse;
@@ -114,7 +115,8 @@ class TwoFactorController extends Controller
     public function verify(Request $request): RedirectResponse
     {
         $request->validate([
-            'code' => ['required', 'string', 'size:6'],
+            'code'         => ['required', 'string', 'size:6'],
+            'trust_device' => ['boolean'],
         ]);
 
         $user = $request->user();
@@ -139,7 +141,22 @@ class TwoFactorController extends Controller
             ]);
         }
 
-        return $this->redirectByRole($user);
+        $redirect = $this->redirectByRole($user);
+
+        // Trust this device for 30 days
+        if ($request->boolean('trust_device')) {
+            $plainToken = Str::random(64);
+            TrustedDevice::create([
+                'user_id'    => $user->id,
+                'token'      => hash('sha256', $plainToken),
+                'expires_at' => now()->addDays(30),
+            ]);
+            $redirect = $redirect->withCookie(
+                cookie('two_factor_trusted', $plainToken, 60 * 24 * 30, '/', null, false, true, false, 'Lax')
+            );
+        }
+
+        return $redirect;
     }
 
     /**

@@ -48,7 +48,12 @@ class AppServiceProvider extends ServiceProvider
                 ]);
 
                 if ($replyTo) {
-                    config(['mail.reply_to.address' => $replyTo]);
+                    config([
+                        'mail.reply_to' => [
+                            'address' => $replyTo,
+                            'name'    => $fromName ?: config('mail.from.name'),
+                        ],
+                    ]);
                 }
             }
         } catch (\Throwable) {

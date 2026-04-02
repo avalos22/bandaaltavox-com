@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import InputError from '@/Components/InputError.vue';
@@ -7,18 +8,28 @@ import TextInput from '@/Components/TextInput.vue';
 
 const props = defineProps({
     categories: Object,
+    subcategories: Object,
 });
 
-const unitOptions = ['por hora', 'por evento', 'por pieza'];
+const unitOptions = ['por hora', 'por evento', 'por pieza', 'Por disparo', 'Por show', 'por servicio', 'por pieza'];
 
 const form = useForm({
     name: '',
-    category: 'extra_hours',
+    category: 'audio',
+    subcategory: '',
     description: '',
     price: '',
+    supplier_price: '',
     unit: 'por evento',
+    duration: '',
     is_active: true,
 });
+
+const availableSubcategories = computed(() => props.subcategories[form.category] ?? []);
+
+const onCategoryChange = () => {
+    form.subcategory = '';
+};
 
 const submit = () => {
     form.post(route('admin.addons.store'));
@@ -56,6 +67,7 @@ const submit = () => {
                         <select
                             id="category"
                             v-model="form.category"
+                            @change="onCategoryChange"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm"
                         >
                             <option v-for="(label, key) in categories" :key="key" :value="key">{{ label }}</option>
@@ -63,6 +75,30 @@ const submit = () => {
                         <InputError class="mt-1" :message="form.errors.category" />
                     </div>
 
+                    <div>
+                        <InputLabel for="subcategory" value="Subcategoría" />
+                        <select
+                            v-if="availableSubcategories.length"
+                            id="subcategory"
+                            v-model="form.subcategory"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm"
+                        >
+                            <option value="">— Sin subcategoría —</option>
+                            <option v-for="s in availableSubcategories" :key="s" :value="s">{{ s }}</option>
+                        </select>
+                        <TextInput
+                            v-else
+                            id="subcategory"
+                            v-model="form.subcategory"
+                            type="text"
+                            class="mt-1 block w-full"
+                            placeholder="Subcategoría"
+                        />
+                        <InputError class="mt-1" :message="form.errors.subcategory" />
+                    </div>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <InputLabel for="unit" value="Unidad" />
                         <select
@@ -74,16 +110,32 @@ const submit = () => {
                         </select>
                         <InputError class="mt-1" :message="form.errors.unit" />
                     </div>
+
+                    <div>
+                        <InputLabel for="duration" value="Duración" />
+                        <TextInput id="duration" v-model="form.duration" type="text" class="mt-1 block w-full" placeholder="Ej: 5 Horas, 40 minutos" />
+                        <InputError class="mt-1" :message="form.errors.duration" />
+                    </div>
                 </div>
 
-                <div>
-                    <InputLabel for="price" value="Precio (MXN)" />
-                    <div class="relative mt-1">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
-                        <TextInput id="price" v-model="form.price" type="number" step="100" min="0" class="block w-full pl-7" required placeholder="0 = Cotizar" />
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <InputLabel for="price" value="Precio público (MXN)" />
+                        <div class="relative mt-1">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                            <TextInput id="price" v-model="form.price" type="number" step="0.01" min="0" class="block w-full pl-7" placeholder="Vacío = a cotizar" />
+                        </div>
+                        <InputError class="mt-1" :message="form.errors.price" />
                     </div>
-                    <p class="mt-1 text-xs text-gray-400">Usa $0 si el precio se define al cotizar</p>
-                    <InputError class="mt-1" :message="form.errors.price" />
+
+                    <div>
+                        <InputLabel for="supplier_price" value="Precio proveedor (MXN)" />
+                        <div class="relative mt-1">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 text-sm">$</span>
+                            <TextInput id="supplier_price" v-model="form.supplier_price" type="number" step="0.01" min="0" class="block w-full pl-7" placeholder="Vacío = sin costo" />
+                        </div>
+                        <InputError class="mt-1" :message="form.errors.supplier_price" />
+                    </div>
                 </div>
 
                 <div>

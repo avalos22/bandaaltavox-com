@@ -11,6 +11,7 @@ class Package extends Model
 {
     protected $fillable = [
         'name', 'slug', 'description', 'price', 'duration_hours',
+        'required_addon_subcategory',
         'image', 'is_active', 'is_featured', 'sort_order',
     ];
 

@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 
 const props = defineProps({
     eventTypes: Array,
+    addonSubcategories: Object,
 });
 
 const form = useForm({
@@ -14,6 +15,7 @@ const form = useForm({
     description: '',
     price: '',
     duration_hours: 5,
+    required_addon_subcategory: '',
     is_active: true,
     is_featured: false,
     event_types: [],
@@ -103,6 +105,22 @@ const submit = () => {
                                 <input type="checkbox" v-model="form.is_featured" class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400" />
                                 <span class="text-sm text-gray-700">Destacado</span>
                             </label>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <InputLabel for="required_addon_subcategory" value="Adicional obligatorio al cotizar" />
+                            <p class="mt-0.5 text-xs text-gray-400">El Vendedor deberá elegir al menos un adicional de esta subcategoría en el wizard de cotización. Dejar vacío si no aplica.</p>
+                            <select
+                                id="required_addon_subcategory"
+                                v-model="form.required_addon_subcategory"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-amber-400 focus:ring-amber-400 text-sm"
+                            >
+                                <option value="">— Ninguno (sin adicional obligatorio) —</option>
+                                <template v-for="(subcats, category) in addonSubcategories" :key="category">
+                                    <option v-for="sub in subcats" :key="sub" :value="sub">{{ sub }}</option>
+                                </template>
+                            </select>
+                            <InputError class="mt-1" :message="form.errors.required_addon_subcategory" />
                         </div>
                     </div>
                 </div>

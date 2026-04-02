@@ -47,11 +47,15 @@ const formatPrice = (price) => {
 };
 
 const categoryColors = {
-    extra_hours: 'bg-blue-100 text-blue-700',
-    equipment: 'bg-purple-100 text-purple-700',
-    effects: 'bg-orange-100 text-orange-700',
-    entertainment: 'bg-pink-100 text-pink-700',
-    other: 'bg-gray-100 text-gray-700',
+    audio:                  'bg-blue-100 text-blue-700',
+    pantallas_video:        'bg-purple-100 text-purple-700',
+    iluminacion:            'bg-yellow-100 text-yellow-700',
+    efectos_especiales:     'bg-orange-100 text-orange-700',
+    mobiliario:             'bg-teal-100 text-teal-700',
+    entretenimiento:        'bg-pink-100 text-pink-700',
+    produccion_estructuras: 'bg-indigo-100 text-indigo-700',
+    produccion_logistica:   'bg-cyan-100 text-cyan-700',
+    video:                  'bg-rose-100 text-rose-700',
 };
 </script>
 
@@ -119,9 +123,10 @@ const categoryColors = {
                                 <span :class="[categoryColors[addon.category] || 'bg-gray-100 text-gray-700', 'rounded-full px-2.5 py-0.5 text-xs font-medium']">
                                     {{ categories[addon.category] || addon.category }}
                                 </span>
+                                <p v-if="addon.subcategory" class="mt-0.5 text-[11px] text-gray-400">{{ addon.subcategory }}</p>
                             </td>
                             <td class="px-4 py-3 text-sm font-medium text-gray-800">
-                                {{ addon.price > 0 ? formatPrice(addon.price) : 'Cotizar' }}
+                                {{ addon.price != null ? formatPrice(addon.price) : 'Cotizar' }}
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-500">{{ addon.unit }}</td>
                             <td class="px-4 py-3">

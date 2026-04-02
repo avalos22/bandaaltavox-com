@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\EventType;
 use App\Models\Package;
 use App\Models\PackageInclude;
-use App\Models\ServiceAddon;
 use Illuminate\Database\Seeder;
 
 class PackageSeeder extends Seeder
@@ -29,61 +28,136 @@ class PackageSeeder extends Seeder
             EventType::firstOrCreate(['slug' => $et['slug']], $et);
         }
 
-        // ─── Package: Altavox ───────────────────────
-        $altavox = Package::firstOrCreate(['slug' => 'altavox'], [
-            'name' => 'Altavox',
-            'description' => 'Cinco horas de repertorio musical versátil. Más que una banda, una experiencia en vivo que transforma tu evento en un recuerdo inolvidable.',
-            'price' => 43000.00,
-            'duration_hours' => 5,
-            'is_active' => true,
-            'is_featured' => true,
-            'sort_order' => 1,
-        ]);
-
-        $altavoxIncludes = [
-            ['description' => 'Servicio de audio e iluminación profesional', 'is_highlighted' => true, 'sort_order' => 1],
-            ['description' => 'Bono de animación con 6 efectos de pirotecnia fría', 'is_highlighted' => true, 'sort_order' => 2],
-            ['description' => 'Collares hawaianos de tela y accesorios luminosos', 'is_highlighted' => false, 'sort_order' => 3],
-            ['description' => 'Aproximadamente 100 artículos de animación', 'is_highlighted' => true, 'sort_order' => 4],
-            ['description' => 'Dos botargas temáticas (Juan Gabriel y Luis Miguel)', 'is_highlighted' => false, 'sort_order' => 5],
+        // ─── Packages ───────────────────────────────
+        $packages = [
+            [
+                'slug' => 'altavox-1-delux',
+                'name' => 'Paquete Altavox 1 Delux',
+                'description' => 'Cinco horas de repertorio musical versátil. Más que una banda, una experiencia en vivo que transforma tu evento en un recuerdo inolvidable.',
+                'price' => 43000.00,
+                'duration_hours' => 5,
+                'is_featured' => true,
+                'sort_order' => 1,
+                'event_type_slugs' => ['boda', 'xv-anos', 'bautizo', 'cumpleanos', 'graduacion'],
+                'includes' => [
+                    ['description' => 'Servicio de audio e iluminación profesional', 'is_highlighted' => true, 'sort_order' => 1],
+                    ['description' => 'Bono de animación con 6 efectos de pirotecnia fría', 'is_highlighted' => true, 'sort_order' => 2],
+                    ['description' => 'Collares hawaianos de tela y accesorios luminosos', 'is_highlighted' => false, 'sort_order' => 3],
+                    ['description' => 'Aproximadamente 100 artículos de animación', 'is_highlighted' => true, 'sort_order' => 4],
+                    ['description' => 'Dos botargas temáticas (Juan Gabriel y Luis Miguel)', 'is_highlighted' => false, 'sort_order' => 5],
+                ],
+            ],
+            [
+                'slug' => 'altavox-2-gold',
+                'name' => 'Paquete Altavox 2 Gold',
+                'description' => null,
+                'price' => 40000.00,
+                'duration_hours' => 4,
+                'required_addon_subcategory' => 'Grupo musical',
+                'is_featured' => true,
+                'sort_order' => 2,
+                'event_type_slugs' => ['boda', 'xv-anos', 'bautizo', 'cumpleanos', 'graduacion'],
+                'includes' => [
+                    ['description' => '4 horas Altavox versátil', 'is_highlighted' => true, 'sort_order' => 1],
+                    ['description' => 'Grupo musical adicional', 'is_highlighted' => true, 'sort_order' => 2],
+                ],
+            ],
+            [
+                'slug' => 'altavox-eventos-pequenos',
+                'name' => 'AltaVox Eventos Pequeños',
+                'description' => null,
+                'price' => 4000.00,
+                'duration_hours' => 1,
+                'is_featured' => false,
+                'sort_order' => 3,
+                'event_type_slugs' => ['bautizo', 'cumpleanos', 'corporativo', 'bar-restaurante', 'otro'],
+                'includes' => [
+                    ['description' => '3 voces en vivo', 'is_highlighted' => true, 'sort_order' => 1],
+                    ['description' => 'Audio con pista', 'is_highlighted' => false, 'sort_order' => 2],
+                ],
+            ],
+            [
+                'slug' => 'dj-protec',
+                'name' => 'DJ - Protec',
+                'description' => null,
+                'price' => 3000.00,
+                'duration_hours' => 5,
+                'is_featured' => false,
+                'sort_order' => 4,
+                'event_type_slugs' => ['boda', 'xv-anos', 'bautizo', 'cumpleanos', 'graduacion', 'corporativo', 'bar-restaurante'],
+                'includes' => [
+                    ['description' => 'Iluminación profesional', 'is_highlighted' => true, 'sort_order' => 1],
+                ],
+            ],
+            [
+                'slug' => 'gender-reveal',
+                'name' => 'Gender Reveal',
+                'description' => null,
+                'price' => 5800.00,
+                'duration_hours' => null,
+                'is_featured' => false,
+                'sort_order' => 5,
+                'event_type_slugs' => ['otro'],
+                'includes' => [
+                    ['description' => 'Caja de cuetes', 'is_highlighted' => false, 'sort_order' => 1],
+                    ['description' => 'Chisperos de pirotecnia fría', 'is_highlighted' => true, 'sort_order' => 2],
+                    ['description' => 'Lluvia de papel', 'is_highlighted' => false, 'sort_order' => 3],
+                    ['description' => 'Bombas de humo', 'is_highlighted' => false, 'sort_order' => 4],
+                ],
+            ],
+            [
+                'slug' => 'posada-grupo-estelar',
+                'name' => 'Posada con Grupo ESTELAR',
+                'description' => null,
+                'price' => null,
+                'duration_hours' => 1,
+                'is_featured' => false,
+                'sort_order' => 6,
+                'event_type_slugs' => ['posada'],
+                'includes' => [],
+            ],
+            [
+                'slug' => 'produccion-soporte-tecnico',
+                'name' => 'Producción / Soporte Técnico',
+                'description' => null,
+                'price' => null,
+                'duration_hours' => null,
+                'is_featured' => false,
+                'sort_order' => 7,
+                'event_type_slugs' => [],
+                'includes' => [
+                    ['description' => 'Operador de audio', 'is_highlighted' => false, 'sort_order' => 1],
+                    ['description' => 'Montaje', 'is_highlighted' => false, 'sort_order' => 2],
+                    ['description' => 'Técnico en sitio', 'is_highlighted' => false, 'sort_order' => 3],
+                ],
+            ],
         ];
 
-        foreach ($altavoxIncludes as $include) {
-            PackageInclude::firstOrCreate(
-                ['package_id' => $altavox->id, 'description' => $include['description']],
-                $include + ['package_id' => $altavox->id]
+        // Also migrate the legacy 'altavox' slug to the new slug if it exists
+        Package::where('slug', 'altavox')->update(['slug' => 'altavox-1-delux', 'name' => 'Paquete Altavox 1 Delux']);
+
+        foreach ($packages as $data) {
+            $includes = $data['includes'];
+            $eventTypeSlugs = $data['event_type_slugs'];
+            unset($data['includes'], $data['event_type_slugs']);
+
+            $package = Package::updateOrCreate(
+                ['slug' => $data['slug']],
+                array_merge(['is_active' => true], $data)
             );
-        }
 
-        // Assign Altavox to event types
-        $altavox->eventTypes()->sync(
-            EventType::whereIn('slug', ['boda', 'xv-anos', 'bautizo', 'cumpleanos', 'graduacion'])->pluck('id')
-        );
+            foreach ($includes as $include) {
+                PackageInclude::firstOrCreate(
+                    ['package_id' => $package->id, 'description' => $include['description']],
+                    $include + ['package_id' => $package->id]
+                );
+            }
 
-        // ─── Service Add-ons ────────────────────────
-        $addons = [
-            // Extra hours
-            ['name' => 'Hora extra - Norteño', 'category' => 'extra_hours', 'description' => 'Una hora adicional con grupo norteño', 'price' => 5500.00, 'unit' => 'por hora', 'sort_order' => 1],
-            ['name' => 'Hora extra - Norteño Banda', 'category' => 'extra_hours', 'description' => 'Una hora adicional con norteño banda', 'price' => 5500.00, 'unit' => 'por hora', 'sort_order' => 2],
-            ['name' => 'Hora extra - Banda Sinaloense', 'category' => 'extra_hours', 'description' => 'Una hora adicional con banda sinaloense', 'price' => 8000.00, 'unit' => 'por hora', 'sort_order' => 3],
-            ['name' => 'Hora extra - DJ', 'category' => 'extra_hours', 'description' => 'Una hora adicional de DJ', 'price' => 3000.00, 'unit' => 'por hora', 'sort_order' => 4],
-
-            // Equipment
-            ['name' => 'Pantalla LED', 'category' => 'equipment', 'description' => 'Pantalla LED para proyección de fotos y videos', 'price' => 0.00, 'unit' => 'por evento', 'sort_order' => 5],
-
-            // Effects
-            ['name' => 'Máquina de CO2', 'category' => 'effects', 'description' => 'Efecto de humo criogénico con CO2', 'price' => 0.00, 'unit' => 'por evento', 'sort_order' => 6],
-            ['name' => 'Pirotecnia fría adicional', 'category' => 'effects', 'description' => 'Efectos adicionales de pirotecnia fría', 'price' => 0.00, 'unit' => 'por evento', 'sort_order' => 7],
-
-            // Entertainment
-            ['name' => 'Grupo Estelar', 'category' => 'entertainment', 'description' => 'Contratación de agrupación estelar / artista famoso para evento privado', 'price' => 0.00, 'unit' => 'por evento', 'sort_order' => 8],
-
-            // Other
-            ['name' => 'Viáticos por traslado', 'category' => 'other', 'description' => 'Cargo adicional para eventos fuera de la zona metropolitana de Saltillo, Coahuila. Cubre transporte, logística y gastos operativos.', 'price' => 0.00, 'unit' => 'por evento', 'sort_order' => 9],
-        ];
-
-        foreach ($addons as $addon) {
-            ServiceAddon::firstOrCreate(['name' => $addon['name']], $addon);
+            if (!empty($eventTypeSlugs)) {
+                $package->eventTypes()->sync(
+                    EventType::whereIn('slug', $eventTypeSlugs)->pluck('id')
+                );
+            }
         }
     }
 }
